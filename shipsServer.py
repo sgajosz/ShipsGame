@@ -7,12 +7,39 @@ def recvall(sock):
         data = data + sock.recv(1).decode()
     return data
 
+def sendToPlayer(player1, player2, command):
+    try:
+        player1.sendall(command.encode())
+        return True
+    except Exception as e:
+        player2.sendall("SECOND_PLAYER_LEFT_GAME\r\n".encode())
+        return False
+
 def game(playerOneConnection, playerTwoConnection):
     logFile = open("server.log", "a")
     info = "Game between " + playerOneConnection[1][0] + " and " + playerTwoConnection[1][0] + " has started\n"
     logFile.write(info)
-    playerOneConnection[0].sendall("Game started!\r\n".encode())
-    playerTwoConnection[0].sendall("Game started!\r\n".encode())
+
+    if not sendToPlayer(playerOneConnection[0], playerTwoConnection[0], "Game started!\r\n"):
+        logFile.write(playerOneConnection[1][0] + "has left the game")
+        logFile.close()
+        return
+    if not sendToPlayer(playerTwoConnection[0], playerOneConnection[0], "Game started!\r\n"):
+        logFile.write(playerTwoConnection[1][0] + "has left the game")
+        logFile.close()
+        return
+
+    if not sendToPlayer(playerOneConnection[0], playerTwoConnection[0], "PLACE_YOUR_SHIPS\r\n"):
+        logFile.write(playerOneConnection[1][0] + "has left the game")
+        logFile.close()
+        return
+    if not sendToPlayer(playerTwoConnection[0], playerOneConnection[0], "PLACE_YOUR_SHIPS\r\n"):
+        logFile.write(playerTwoConnection[1][0] + "has left the game")
+        logFile.close()
+        return
+
+    
+
     info = "Game between " + playerOneConnection[1][0] + " and " + playerTwoConnection[1][0] + " has ended\n"
     logFile.write(info)
     playerOneConnection[0].close()
